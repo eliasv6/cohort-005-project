@@ -404,9 +404,9 @@ export async function loader({ params, request }: Route.LoaderArgs) {
       const eligibility = getRefundEligibility(currentUserId, {
         id: course.id,
         price: courseWithDetails.price,
-      });
-      if (eligibility?.eligibility.eligible) {
-        eligibleRefund = eligibility.eligibility;
+      })?.eligibility;
+      if (eligibility?.eligible) {
+        eligibleRefund = eligibility;
       }
 
       progress = calculateProgress(currentUserId, course.id, false);

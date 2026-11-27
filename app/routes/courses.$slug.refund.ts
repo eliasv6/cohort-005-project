@@ -88,17 +88,19 @@ export async function action({ params, request }: Route.ActionArgs) {
     throw data("User not found", { status: 404 });
   }
 
-  const eligibility = getRefundEligibility(currentUserId, course);
+  const purchaseEligibility = getRefundEligibility(currentUserId, course);
 
-  if (!eligibility) {
+  if (!purchaseEligibility) {
     throw data(
       "You have not bought this course, so there is nothing to send a refund request for.",
       { status: 403 }
     );
   }
 
-  if (!eligibility.eligibility.eligible) {
-    throw refusal(eligibility.eligibility.reason);
+  const { purchaseId, eligibility } = purchaseEligibility;
+
+  if (!eligibility.eligible) {
+    throw refusal(eligibility.reason);
   }
 
   const formData = await request.formData();
@@ -108,13 +110,13 @@ export async function action({ params, request }: Route.ActionArgs) {
     return data({ errors: parsed.errors }, { status: 400 });
   }
 
-  createRefundRequest(eligibility.purchaseId, parsed.data.reason);
+  createRefundRequest(purchaseId, parsed.data.reason);
 
   const email = buildRefundRequestedEmail({
     learnerName: learner.name,
     learnerEmail: learner.email,
     courseTitle: course.title,
-    amount: eligibility.eligibility.amount,
+    amount: eligibility.amount,
   });
 
   console.log(`[email] to=${email.to} subject=${email.subject}\n${email.body}`);
