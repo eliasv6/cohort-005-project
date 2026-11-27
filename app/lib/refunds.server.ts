@@ -20,8 +20,8 @@ import { formatPrice } from "~/lib/utils";
 // See GLOSSARY.md for the vocabulary.
 
 export const REFUND_WINDOW_DAYS = 14;
-export const REFUND_WATCH_LIMIT_SECONDS = 2 * 60 * 60;
-export const REFUND_COMPLETION_LIMIT = 0.5;
+const REFUND_WATCH_LIMIT_SECONDS = 2 * 60 * 60;
+const REFUND_COMPLETION_LIMIT = 0.5;
 
 export type RefundEligibilityFacts = {
   purchasedAt: string;
@@ -121,7 +121,7 @@ export function buildRefundRequestedEmail(input: {
       `Hi ${input.learnerName},`,
       "",
       `We have your refund request for "${input.courseTitle}".`,
-      `The refund is for ${formatPrice(input.amount)}, the amount you paid.`,
+      `Your refund request is for ${formatPrice(input.amount)}, the amount you paid.`,
       "",
       "Our team reviews every refund request by hand. You do not need to do anything else — we will email you again when it is done.",
       "",
@@ -202,7 +202,7 @@ function isClaimedTeamSeat(purchaseId: number) {
   return claimedSeat !== undefined;
 }
 
-export function getPendingRefundRequest(purchaseId: number) {
+function getPendingRefundRequest(purchaseId: number) {
   return db
     .select()
     .from(refundRequests)

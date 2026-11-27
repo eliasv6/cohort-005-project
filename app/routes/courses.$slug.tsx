@@ -45,7 +45,10 @@ import { formatDuration, formatPrice } from "~/lib/utils";
 import { renderMarkdown } from "~/lib/markdown.server";
 import { resolveCountry } from "~/lib/country.server";
 import { calculatePppPrice, getCountryTierInfo } from "~/lib/ppp";
-import { getRefundEligibility } from "~/lib/refunds.server";
+import {
+  getRefundEligibility,
+  type RefundEligibility,
+} from "~/lib/refunds.server";
 import { parseFormData } from "~/lib/validation";
 import { MAX_RATING, MIN_RATING } from "~/lib/ratings";
 import { StarRating, StarRatingInput } from "~/components/star-rating";
@@ -391,22 +394,19 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   let progress = 0;
   let lessonProgressMap: Record<number, string> = {};
   let nextLessonId: number | null = null;
-  let refundOffer: { amount: number; lastDayOfRefundWindow: string } | null =
+  let eligibleRefund: Extract<RefundEligibility, { eligible: true }> | null =
     null;
 
   if (currentUserId) {
     enrolled = isUserEnrolled(currentUserId, course.id);
 
     if (enrolled) {
-      const refund = getRefundEligibility(currentUserId, {
+      const eligibility = getRefundEligibility(currentUserId, {
         id: course.id,
         price: courseWithDetails.price,
       });
-      if (refund?.eligibility.eligible) {
-        refundOffer = {
-          amount: refund.eligibility.amount,
-          lastDayOfRefundWindow: refund.eligibility.lastDayOfRefundWindow,
-        };
+      if (eligibility?.eligibility.eligible) {
+        eligibleRefund = eligibility.eligibility;
       }
 
       progress = calculateProgress(currentUserId, course.id, false);
@@ -451,7 +451,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     tierInfo,
     ratingSummary,
     userRating,
-    refundOffer,
+    eligibleRefund,
   };
 }
 
@@ -552,7 +552,7 @@ export default function CourseDetail({ loaderData }: Route.ComponentProps) {
     tierInfo,
     ratingSummary,
     userRating,
-    refundOffer,
+    eligibleRefund,
   } = loaderData;
   const isInstructor = currentUserId === course.instructorId;
   const [searchParams, setSearchParams] = useSearchParams();
@@ -788,10 +788,10 @@ export default function CourseDetail({ loaderData }: Route.ComponentProps) {
                     </Button>
                   </Link>
                   <RateCourse userRating={userRating} />
-                  {refundOffer && (
+                  {eligibleRefund && (
                     <RequestRefund
                       slug={course.slug}
-                      amount={refundOffer.amount}
+                      amount={eligibleRefund.amount}
                     />
                   )}
                 </>

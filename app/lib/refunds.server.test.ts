@@ -97,7 +97,7 @@ describe("checkRefundEligibility", () => {
 
     it("is eligible just under half the lessons completed", () => {
       const result = checkRefundEligibility(
-        makeFacts({ lessonsCompleted: 4, totalLessons: 9 }),
+        makeFacts({ lessonsCompleted: 49, totalLessons: 100 }),
         today
       );
       expect(result.eligible).toBe(true);
@@ -114,7 +114,7 @@ describe("checkRefundEligibility", () => {
 
     it("skips the completion check for a course with no lessons", () => {
       const result = checkRefundEligibility(
-        makeFacts({ lessonsCompleted: 0, totalLessons: 0 }),
+        makeFacts({ lessonsCompleted: 3, totalLessons: 0 }),
         today
       );
       expect(result.eligible).toBe(true);
@@ -200,7 +200,7 @@ describe("buildRefundRequestedEmail", () => {
       'We have your refund request for "Introduction to TypeScript".'
     );
     expect(email.body).toContain(
-      "The refund is for $79.00, the amount you paid."
+      "Your refund request is for $79.00, the amount you paid."
     );
     expect(email.body).toContain(
       "Our team reviews every refund request by hand."
