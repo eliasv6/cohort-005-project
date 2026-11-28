@@ -34,7 +34,7 @@ function NavItem() {
 
 type Filter = "all" | "unread" | Group;
 
-function Page() {
+export function Page() {
   const s = useNotificationsPrototype();
   const nav = useNavigate();
   const [filter, setFilter] = useState<Filter>("all");

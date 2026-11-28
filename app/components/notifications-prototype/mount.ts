@@ -9,5 +9,5 @@ export interface VariantMount {
   AboveOutlet?: () => React.ReactNode; // top of the main content area
   navBadges?: (s: Store) => Record<string, number>; // badge counts keyed by nav `to`
   Page?: () => React.ReactNode; // what /notifications renders; absent = "no page"
-  toastsFor: (n: ProtoNotification) => boolean;
+  toastsFor: (n: ProtoNotification, s: Store) => boolean;
 }

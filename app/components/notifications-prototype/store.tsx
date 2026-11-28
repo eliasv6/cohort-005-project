@@ -21,6 +21,7 @@ export const VARIANTS = [
   { key: "B", name: "Inbox page, toasts for Discussion" },
   { key: "C", name: "Side drawer with tabs, no toasts" },
   { key: "D", name: "No bell: in context, toasts" },
+  { key: "E", name: "C's footer item → B's inbox, toasts" },
 ] as const;
 export type VariantKey = (typeof VARIANTS)[number]["key"];
 
@@ -37,6 +38,8 @@ export interface Store {
   markAllSeen: () => void;
   simulateArrival: () => ProtoNotification | undefined;
   lastArrivalId: string | null;
+  toastScope: "all" | "discussion";
+  setToastScope: (s: "all" | "discussion") => void;
 }
 
 const Ctx = createContext<Store | null>(null);
@@ -74,6 +77,7 @@ export function NotificationsPrototypeProvider({
   const [all, setAll] = useState<ProtoNotification[]>([]);
   const [feedState, setFeedState] = useState<FeedState>("ready");
   const [lastArrivalId, setLastArrivalId] = useState<string | null>(null);
+  const [toastScope, setToastScope] = useState<"all" | "discussion">("all");
   const cursor = useRef(0);
 
   useEffect(() => {
@@ -128,6 +132,8 @@ export function NotificationsPrototypeProvider({
     markAllSeen: () => setAll((xs) => xs.map((x) => ({ ...x, seen: true }))),
     simulateArrival,
     lastArrivalId,
+    toastScope,
+    setToastScope,
   };
 
   return <Ctx.Provider value={store}>{children}</Ctx.Provider>;
