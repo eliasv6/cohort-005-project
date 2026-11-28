@@ -10,6 +10,11 @@ import {
   type RenderedComment,
 } from "~/components/comment-thread";
 import { MIN_COMMENT_LENGTH, MAX_COMMENT_LENGTH } from "~/lib/comments";
+import {
+  notifyReplyDeleted,
+  notifyReplyPosted,
+  nudgeDrainer,
+} from "~/lib/notifications.prototype.server";
 import { db } from "~/db";
 import {
   categories,
@@ -900,12 +905,17 @@ export async function action({ params, request }: Route.ActionArgs) {
         if (!parsed.success) {
           return { ok: false, error: "Enter a comment before posting." };
         }
-        createComment(
-          currentUserId,
-          lessonId,
-          parsed.data.parentId ?? null,
-          parsed.data.body
-        );
+        // PROTOTYPE (issue #17): Reply + outbox row in one transaction.
+        db.transaction(() => {
+          const created = createComment(
+            currentUserId,
+            lessonId,
+            parsed.data.parentId ?? null,
+            parsed.data.body
+          );
+          notifyReplyPosted(created.id);
+        });
+        nudgeDrainer();
         return { ok: true };
       }
 
@@ -932,7 +942,15 @@ export async function action({ params, request }: Route.ActionArgs) {
       if (!existing || existing.lessonId !== lessonId) {
         throw data("Comment not found", { status: 404 });
       }
-      deleteComment(parsed.data.commentId, currentUserId, access.isStaff);
+      // PROTOTYPE (issue #17): soft-delete + archive row in one transaction.
+      db.transaction(() => {
+        const wasLive = existing.deletedAt === null;
+        deleteComment(parsed.data.commentId, currentUserId, access.isStaff);
+        if (wasLive && existing.parentId !== null) {
+          notifyReplyDeleted(existing.id);
+        }
+      });
+      nudgeDrainer();
       return { ok: true };
     } catch (error) {
       // Service validation failures are user-correctable; anything thrown as a
