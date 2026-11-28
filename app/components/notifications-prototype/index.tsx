@@ -8,7 +8,7 @@ import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import { PrototypeSwitcher } from "~/components/prototype-switcher";
 import type { VariantMount } from "./mount";
-import { plainText } from "./parts";
+import { NotificationToast } from "./toast";
 import { type FeedState, type VariantKey, VARIANTS, useNotificationsPrototype } from "./store";
 import { VariantA } from "./variant-a";
 import { VariantB } from "./variant-b";
@@ -34,10 +34,13 @@ export function NotificationsPrototypeBar() {
     const n = s.simulateArrival();
     if (!n) return;
     if (mount.toastsFor(n, s)) {
-      toast(plainText(n), {
-        description: n.course,
-        action: { label: "View", onClick: () => { s.markRead(n.id); nav(n.href); } },
-      });
+      toast.custom((id) => (
+        <NotificationToast
+          n={n}
+          onView={() => { s.markRead(n.id); toast.dismiss(id); nav(n.href); }}
+          onClose={() => toast.dismiss(id)}
+        />
+      ));
     }
   }
 

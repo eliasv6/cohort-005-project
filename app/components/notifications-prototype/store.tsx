@@ -77,7 +77,7 @@ export function NotificationsPrototypeProvider({
   const [all, setAll] = useState<ProtoNotification[]>([]);
   const [feedState, setFeedState] = useState<FeedState>("ready");
   const [lastArrivalId, setLastArrivalId] = useState<string | null>(null);
-  const [toastScope, setToastScope] = useState<"all" | "discussion">("all");
+  const [toastScope, setToastScope] = useState<"all" | "discussion">("discussion");
   const cursor = useRef(0);
 
   useEffect(() => {
