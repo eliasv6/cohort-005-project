@@ -3,6 +3,12 @@ import type { Route } from "./+types/layout.app";
 import { Sidebar } from "~/components/sidebar";
 import { DevUI } from "~/components/dev-ui";
 import { Toaster } from "sonner";
+import {
+  NotificationsPrototypeProvider,
+  NotificationsPrototypeBar,
+  useNotificationsPrototype,
+  useVariantMount,
+} from "~/components/notifications-prototype";
 import { getCurrentUserId, getDevCountry } from "~/lib/session";
 import { getCountryTierInfo, COUNTRIES } from "~/lib/ppp";
 import { eq, and, or, sql, desc } from "drizzle-orm";
@@ -228,13 +234,15 @@ export default function AppLayout({ loaderData }: Route.ComponentProps) {
   } = loaderData;
 
   return (
+    <NotificationsPrototypeProvider role={currentUser?.role ?? null}>
     <div className="flex h-screen overflow-hidden">
-      <Sidebar
+      <PrototypeSidebar
         currentUser={currentUser}
         recentCourses={recentCourses}
         isTeamAdmin={userIsTeamAdmin}
       />
       <main className="flex-1 overflow-y-auto">
+        <PrototypeAboveOutlet />
         <Outlet />
       </main>
       <DevUI
@@ -245,6 +253,28 @@ export default function AppLayout({ loaderData }: Route.ComponentProps) {
         countries={countries}
       />
       <Toaster position="bottom-right" richColors closeButton />
+      <NotificationsPrototypeBar />
     </div>
+    </NotificationsPrototypeProvider>
   );
+}
+
+// PROTOTYPE, throwaway: fills the Sidebar slots from the current variant.
+function PrototypeSidebar(props: React.ComponentProps<typeof Sidebar>) {
+  const store = useNotificationsPrototype();
+  const m = useVariantMount();
+  return (
+    <Sidebar
+      {...props}
+      headerSlot={m.SidebarHeader && <m.SidebarHeader />}
+      navSlot={m.SidebarNav && <m.SidebarNav />}
+      footerSlot={m.SidebarFooter && <m.SidebarFooter />}
+      navBadges={m.navBadges?.(store)}
+    />
+  );
+}
+
+function PrototypeAboveOutlet() {
+  const m = useVariantMount();
+  return m.AboveOutlet ? <m.AboveOutlet /> : null;
 }
